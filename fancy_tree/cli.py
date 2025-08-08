@@ -258,8 +258,15 @@ def test(path: Optional[Path] = typer.Argument(None, help="Path to test (default
     test_command(path)
 
 
+@app.command()
+def metrics(path: Optional[Path] = typer.Argument(None, help="Path to analyze (default: current directory)")):
+    """Analyze code metrics and complexity for a directory."""
+    metrics_command(path)
+
+
 if __name__ == "__main__":
     app() 
+
 
 
 
