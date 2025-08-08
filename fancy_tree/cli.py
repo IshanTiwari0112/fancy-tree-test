@@ -12,6 +12,7 @@ from rich.panel import Panel
 from .core.extraction import process_repository
 from .core.formatter import format_repository_tree
 from .core.metrics import calculate_repository_metrics, MetricsCalculator
+from .search.engine import SearchEngine, SearchType, SearchFilter, FilterOperator
 
 app = typer.Typer(
     name="fancy-tree",
@@ -266,6 +267,7 @@ def metrics(path: Optional[Path] = typer.Argument(None, help="Path to analyze (d
 
 if __name__ == "__main__":
     app() 
+
 
 
 
