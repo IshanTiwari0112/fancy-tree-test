@@ -52,6 +52,8 @@ def main(
             languages_command()
         elif str(path) == "test":
             test_command(None)
+        elif str(path) == "metrics":
+            metrics_command(None)
         return
     
     # Default to current directory
@@ -195,4 +197,5 @@ def test(path: Optional[Path] = typer.Argument(None, help="Path to test (default
 
 if __name__ == "__main__":
     app() 
+
 
