@@ -23,7 +23,7 @@ app = typer.Typer(
 console = Console()
 
 # Define subcommand names to avoid treating them as paths
-SUBCOMMAND_NAMES = {"languages", "version", "test", "metrics"}
+SUBCOMMAND_NAMES = {"languages", "version", "test", "metrics", "search"}
 
 
 @app.callback(invoke_without_command=True)
@@ -267,6 +267,7 @@ def metrics(path: Optional[Path] = typer.Argument(None, help="Path to analyze (d
 
 if __name__ == "__main__":
     app() 
+
 
 
 
