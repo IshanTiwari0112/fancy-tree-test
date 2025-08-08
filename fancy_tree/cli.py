@@ -11,6 +11,7 @@ from rich.panel import Panel
 
 from .core.extraction import process_repository
 from .core.formatter import format_repository_tree
+from .core.metrics import calculate_repository_metrics, MetricsCalculator
 
 app = typer.Typer(
     name="fancy-tree",
