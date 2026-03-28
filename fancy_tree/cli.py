@@ -11,6 +11,8 @@ from rich.panel import Panel
 
 from .core.extraction import process_repository
 from .core.formatter import format_repository_tree
+from .core.metrics import calculate_repository_metrics, MetricsCalculator
+from .search.engine import SearchEngine, SearchType, SearchFilter, FilterOperator
 
 app = typer.Typer(
     name="fancy-tree",
@@ -21,7 +23,7 @@ app = typer.Typer(
 console = Console()
 
 # Define subcommand names to avoid treating them as paths
-SUBCOMMAND_NAMES = {"languages", "version", "test"}
+SUBCOMMAND_NAMES = {"languages", "version", "test", "metrics", "search"}
 
 
 @app.callback(invoke_without_command=True)
@@ -51,6 +53,8 @@ def main(
             languages_command()
         elif str(path) == "test":
             test_command(None)
+        elif str(path) == "metrics":
+            metrics_command(None)
         return
     
     # Default to current directory
@@ -174,6 +178,69 @@ def test_command(path: Optional[Path]):
         raise typer.Exit(1)
 
 
+def metrics_command(path: Optional[Path]):
+    """Actual metrics analysis logic."""
+    if path is None:
+        path = Path.cwd()
+    
+    console.print(Panel(f"Analyzing code metrics for: {path}", style="bold blue"))
+    
+    try:
+        # Process repository to get basic structure
+        repo_summary = process_repository(path, max_files=None)  # No limit for metrics
+        
+        console.print(f"✓ Processed {repo_summary.total_files} files")
+        console.print(f"✓ Found {len(repo_summary.languages)} languages")
+        
+        # Calculate comprehensive metrics
+        with console.status("[bold green]Calculating code metrics..."):
+            metrics_data = calculate_repository_metrics(repo_summary)
+        
+        # Display summary
+        summary = metrics_data['summary']
+        console.print("\n[bold]Code Quality Summary:[/bold]")
+        console.print(f"  Files analyzed: {summary['total_files_analyzed']}")
+        console.print(f"  Total functions: {summary['total_functions']}")
+        console.print(f"  Total classes: {summary['total_classes']}")
+        console.print(f"  Total code lines: {summary['total_code_lines']}")
+        console.print(f"  Average complexity: {summary['average_complexity']}")
+        console.print(f"  Average maintainability: {summary['average_maintainability']:.1f}/100")
+        
+        # Display technical debt indicators
+        debt = summary['technical_debt_indicators']
+        total_debt = sum(debt.values())
+        if total_debt > 0:
+            console.print(f"\n[bold]Technical Debt Indicators ({total_debt} total):[/bold]")
+            if debt['critical'] > 0:
+                console.print(f"  🔴 Critical: {debt['critical']}")
+            if debt['high'] > 0:
+                console.print(f"  🟠 High: {debt['high']}")
+            if debt['medium'] > 0:
+                console.print(f"  🟡 Medium: {debt['medium']}")
+            if debt['low'] > 0:
+                console.print(f"  🟢 Low: {debt['low']}")
+        else:
+            console.print("\n[bold green]✓ No significant technical debt detected![/bold green]")
+        
+        # Display top complex functions
+        if metrics_data['top_complex_functions']:
+            console.print(f"\n[bold]Most Complex Functions:[/bold]")
+            for i, func in enumerate(metrics_data['top_complex_functions'][:5], 1):
+                console.print(f"  {i}. {func['function']} ({func['file']}) - Complexity: {func['complexity']}")
+        
+        # Display largest functions
+        if metrics_data['largest_functions']:
+            console.print(f"\n[bold]Largest Functions:[/bold]")
+            for i, func in enumerate(metrics_data['largest_functions'][:5], 1):
+                console.print(f"  {i}. {func['function']} ({func['file']}) - {func['lines']} lines")
+        
+        console.print("\n[bold green]✓ Metrics analysis completed successfully![/bold green]")
+        
+    except Exception as e:
+        console.print(f"✗ Metrics analysis failed: {e}", style="red")
+        raise typer.Exit(1)
+
+
 @app.command()
 def version():
     """Show version information."""
@@ -192,5 +259,17 @@ def test(path: Optional[Path] = typer.Argument(None, help="Path to test (default
     test_command(path)
 
 
+@app.command()
+def metrics(path: Optional[Path] = typer.Argument(None, help="Path to analyze (default: current directory)")):
+    """Analyze code metrics and complexity for a directory."""
+    metrics_command(path)
+
+
 if __name__ == "__main__":
     app() 
+
+
+
+
+
+
